@@ -2,6 +2,7 @@ import requests
 import json
 import chess.pgn
 import io
+import pandas as pd
 
 def getNames(titles):
     nameSet = set()
@@ -44,19 +45,39 @@ def getPGN(url):
         print(r)
     else:
         pgn = r.text
-    return io.StringIO(pgn)
+    return pgn
+
+def getMoves(game):
+    moves = []
+    for move in game.mainline_moves():
+        moves.append(move.uci())
+    # Even moves: white 
+    # Odd moves: black
+    return moves     
 
 if __name__ == "__main__":
     n = getNames(['GM', 'WGM', 'IM'])
     url_list = getPGNurls(n.pop())
 
-    pgn = getPGN(url_list[0])
     
-    game1 = chess.pgn.read_game(pgn)
+    # game1 = chess.pgn.read_game(pgn)
+    pgn_df = pd.DataFrame(columns=['WhiteVsBlack'])
 
-    gameFile = open("test.pgn", "w", encoding="utf-8")
-    exporter = chess.pgn.FileExporter(gameFile)
-    game_string = game1.accept(exporter)
+    for url in url_list:
+        pgn = getPGN(url)
+        game = chess.pgn.read_game(io.StringIO(pgn))
+
+        versus = '{' + game.headers['White'] + '} vs {' + game.headers['Black'] + "}"
+
+        print(getMoves(game))
+        #print(''.join(game.variations))
+
+        #print(getMoveSentence(pgn))
+
+
+    #gameFile = open("test.pgn", "w", encoding="utf-8")
+    #exporter = chess.pgn.FileExporter(gameFile)
+    #game_string = game1.accept(exporter)
 
     
 
