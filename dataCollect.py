@@ -58,19 +58,21 @@ def getMoves(game):
     return moves     
 
 if __name__ == "__main__":
-    n = getNames(['GM', 'WGM', 'IM'])
+    #n = getNames(['GM', 'WGM', 'IM'])
+    n = getNames(['IM'])
     url_list = getPGNurls(n.pop())
     for name in n:
         url_list.extend(getPGNurls(name))
     
     print('Creating DataFrame')
+
     vsList = []
     movesList = []
     for url in url_list:
         pgn = getPGN(url)
         game = chess.pgn.read_game(io.StringIO(pgn))
 
-        versus = '{' + game.headers['White'] + '} vs {' + game.headers['Black'] + "}"
+        versus = '{' + game.headers['White'] + '} vs {' + game.headers['Black'] + '}'
 
         moves = getMoves(game)
 
@@ -81,10 +83,16 @@ if __name__ == "__main__":
     pgn_df['WhiteVsBlack'] = pd.Series(data=vsList)
     pgn_df['Moves'] = pd.Series(data=movesList, dtype='object')
     
+    pgn_df.drop_duplicates(subset='WhiteVsBlack', inplace=True)
+
     print('DataFrame complete')
+
+    print('Exporting data to CSV')
 
     # Export data to csv
     pgn_df.to_csv('ChessDataAccessed'+ date.today())
+
+    print('Data successfully exported to CSV')
 
     #gameFile = open("test.pgn", "w", encoding="utf-8")
     #exporter = chess.pgn.FileExporter(gameFile)
