@@ -3,6 +3,8 @@ import json
 import chess.pgn
 import io
 import pandas as pd
+import numpy as np
+from datetime import date
 
 def getNames(titles):
     nameSet = set()
@@ -58,22 +60,31 @@ def getMoves(game):
 if __name__ == "__main__":
     n = getNames(['GM', 'WGM', 'IM'])
     url_list = getPGNurls(n.pop())
-
+    for name in n:
+        url_list.extend(getPGNurls(name))
     
-    # game1 = chess.pgn.read_game(pgn)
-    pgn_df = pd.DataFrame(columns=['WhiteVsBlack'])
-
+    print('Creating DataFrame')
+    vsList = []
+    movesList = []
     for url in url_list:
         pgn = getPGN(url)
         game = chess.pgn.read_game(io.StringIO(pgn))
 
         versus = '{' + game.headers['White'] + '} vs {' + game.headers['Black'] + "}"
 
-        print(getMoves(game))
-        #print(''.join(game.variations))
+        moves = getMoves(game)
 
-        #print(getMoveSentence(pgn))
+        vsList.append(versus)
+        movesList.append(moves)
+    
+    pgn_df = pd.DataFrame()
+    pgn_df['WhiteVsBlack'] = pd.Series(data=vsList)
+    pgn_df['Moves'] = pd.Series(data=movesList, dtype='object')
+    
+    print('DataFrame complete')
 
+    # Export data to csv
+    pgn_df.to_csv('ChessDataAccessed'+ date.today())
 
     #gameFile = open("test.pgn", "w", encoding="utf-8")
     #exporter = chess.pgn.FileExporter(gameFile)
